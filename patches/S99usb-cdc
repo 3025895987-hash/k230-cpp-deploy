@@ -1,0 +1,107 @@
+#!/bin/sh
+# K230 USB CDC ACM Console
+# 在庐山派 / CanMV K230 LCKFB 上，通过 USB 口提供一个免串口线的 Linux 登录控制台。
+#
+# 依赖内核配置：CONFIG_USB_CONFIGFS_ACM=y
+# 对应补丁见 patches/0001-usb-cdc-acm-console.patch
+
+CONFIGFS_ROOT=/sys/kernel/config
+GADGET_DIR=${CONFIGFS_ROOT}/usb_gadget/k230-cdc
+UDC_NAME=91500000.usb-otg
+GETTY_PID_FILE=/var/run/k230-usb-cdc-getty.pid
+
+start_gadget()
+{
+	mkdir -p "${CONFIGFS_ROOT}"
+	grep -qs " ${CONFIGFS_ROOT} configfs " /proc/mounts ||
+		mount -t configfs none "${CONFIGFS_ROOT}"
+
+	mkdir -p "${GADGET_DIR}"
+	cd "${GADGET_DIR}" || return 1
+
+	echo 0x29f1 > idVendor
+	echo 0x0230 > idProduct
+	echo 0x0100 > bcdDevice
+	echo 0x0200 > bcdUSB
+	echo 0xEF > bDeviceClass
+	echo 0x02 > bDeviceSubClass
+	echo 0x01 > bDeviceProtocol
+
+	mkdir -p strings/0x409
+	echo "Canaan Inc." > strings/0x409/manufacturer
+	echo "K230 Linux Console" > strings/0x409/product
+	echo "K230-LCKFB-CDC" > strings/0x409/serialnumber
+
+	mkdir -p configs/c.1/strings/0x409
+	echo "CDC ACM Console" > configs/c.1/strings/0x409/configuration
+	echo 250 > configs/c.1/MaxPower
+
+	mkdir -p functions/acm.usb0
+	if [ ! -e configs/c.1/acm.usb0 ]; then
+		ln -s functions/acm.usb0 configs/c.1/
+	fi
+
+	if [ ! -s UDC ]; then
+		echo "${UDC_NAME}" > UDC
+	fi
+}
+
+start_getty()
+{
+	if [ -f "${GETTY_PID_FILE}" ] &&
+		kill -0 "$(cat "${GETTY_PID_FILE}")" 2>/dev/null; then
+		return 0
+	fi
+
+	(
+		while :; do
+			while [ ! -e /dev/ttyGS0 ]; do
+				sleep 1
+			done
+			/sbin/getty -L ttyGS0 115200 vt100
+			sleep 1
+		done
+	) &
+	echo $! > "${GETTY_PID_FILE}"
+}
+
+stop_getty()
+{
+	if [ -f "${GETTY_PID_FILE}" ]; then
+		kill "$(cat "${GETTY_PID_FILE}")" 2>/dev/null || true
+		rm -f "${GETTY_PID_FILE}"
+	fi
+}
+
+stop_gadget()
+{
+	if [ ! -d "${GADGET_DIR}" ]; then
+		return 0
+	fi
+
+	cd "${GADGET_DIR}" || return 1
+	if [ -s UDC ]; then
+		echo "" > UDC
+	fi
+}
+
+case "$1" in
+	start)
+		start_gadget
+		start_getty
+		;;
+	stop)
+		stop_getty
+		stop_gadget
+		;;
+	restart)
+		stop_getty
+		stop_gadget
+		start_gadget
+		start_getty
+		;;
+	*)
+		echo "Usage: $0 {start|stop|restart}"
+		exit 1
+		;;
+esac

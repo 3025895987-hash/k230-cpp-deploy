@@ -1,0 +1,32 @@
+diff --git a/src/little/buildroot-ext/package/usb_test/usb_test.mk b/src/little/buildroot-ext/package/usb_test/usb_test.mk
+index 3f2fd16f6..622b4bc36 100755
+--- a/src/little/buildroot-ext/package/usb_test/usb_test.mk
++++ b/src/little/buildroot-ext/package/usb_test/usb_test.mk
+@@ -12,10 +12,11 @@ endef
+
+ define USB_TEST_INSTALL_TARGET_CMDS
+ 	$(INSTALL) -D -m 0755 $(@D)/usb_test $(TARGET_DIR)/usr/bin/usb_test
+-	cp -rf $(@D)/gadget-usbtest.sh $(TARGET_DIR)/usr/bin/gadget-usbtest.sh
+-	cp -rf $(@D)/gadget-storage-mem.sh $(TARGET_DIR)/usr/bin/gadget-storage-mem.sh
+-	cp -rf $(@D)/gadget-storage.sh $(TARGET_DIR)/usr/bin/gadget-storage.sh
+-	$(INSTALL) -D -m 0755 $(@D)/test_keyboard $(TARGET_DIR)/usr/bin/test_keyboard
++	cp -rf $(@D)/gadget-usbtest.sh $(TARGET_DIR)/usr/bin/gadget-usbtest.sh
++	cp -rf $(@D)/gadget-storage-mem.sh $(TARGET_DIR)/usr/bin/gadget-storage-mem.sh
++	cp -rf $(@D)/gadget-storage.sh $(TARGET_DIR)/usr/bin/gadget-storage.sh
++	$(INSTALL) -D -m 0755 $(@D)/S99usb-cdc $(TARGET_DIR)/etc/init.d/S99usb-cdc
++	$(INSTALL) -D -m 0755 $(@D)/test_keyboard $(TARGET_DIR)/usr/bin/test_keyboard
+ 	$(INSTALL) -D -m 0755 $(@D)/test_mouse $(TARGET_DIR)/usr/bin/test_mouse
+ 	cp -rf $(@D)/gadget-hid.sh $(TARGET_DIR)/usr/bin/gadget-hid.sh
+ 	$(INSTALL) -D -m 0755 $(@D)/hid_gadget_test $(TARGET_DIR)/usr/bin/hid_gadget_test
+diff --git a/src/little/linux/arch/riscv/configs/k230_canmv_lckfb_defconfig b/src/little/linux/arch/riscv/configs/k230_canmv_lckfb_defconfig
+index 0b060ef7a..d40e64d87 100755
+--- a/src/little/linux/arch/riscv/configs/k230_canmv_lckfb_defconfig
++++ b/src/little/linux/arch/riscv/configs/k230_canmv_lckfb_defconfig
+@@ -320,6 +320,7 @@ CONFIG_USB_TEST=m
+ CONFIG_USB_GADGET=y
+ CONFIG_USB_SNP_UDC_PLAT=y
+ CONFIG_USB_CONFIGFS=y
++CONFIG_USB_CONFIGFS_ACM=y
+ CONFIG_USB_CONFIGFS_MASS_STORAGE=y
+ CONFIG_USB_CONFIGFS_F_LB_SS=y
+ CONFIG_USB_CONFIGFS_F_HID=y
