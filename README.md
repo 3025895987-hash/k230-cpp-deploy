@@ -41,7 +41,7 @@
 
 ```bash
 # 1. 拿到本仓库
-git clone https://github.com/<你的用户名>/k230-cpp-deploy.git
+git clone https://github.com/3025895987-hash/k230-cpp-deploy.git
 cd k230-cpp-deploy
 
 # 2. 交叉编译 hello
